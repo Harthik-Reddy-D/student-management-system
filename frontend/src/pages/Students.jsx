@@ -1,0 +1,10 @@
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import api, { apiMessage } from '../services/api.js'
+export default function Students() {
+  const [items, setItems] = useState([]); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [busyId, setBusyId] = useState(null)
+  const load = async () => { setLoading(true); setError(''); try { const { data } = await api.get('/students'); setItems(data) } catch (e) { setError(apiMessage(e)) } finally { setLoading(false) } }
+  useEffect(() => { load() }, [])
+  const remove = async (student) => { if (!window.confirm(`Delete ${student.name}? This action cannot be undone.`)) return; setBusyId(student.id); setError(''); try { await api.delete(`/students/${student.id}`); setItems((old) => old.filter((s) => s.id !== student.id)) } catch (e) { setError(apiMessage(e)) } finally { setBusyId(null) } }
+  return <main className="page"><div className="page-heading"><div><p className="eyebrow">DIRECTORY</p><h1>Students</h1><p className="muted">Manage student profiles and department details.</p></div><Link className="button button-primary" to="/students/new">+ Add student</Link></div>{error && <div className="alert">{error}</div>}<section className="panel table-panel">{loading ? <p className="loading">Loading students…</p> : items.length === 0 ? <div className="empty"><h3>No students yet</h3><p className="muted">Create your first student record to get started.</p><Link className="button button-primary" to="/students/new">Add student</Link></div> : <div className="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Department</th><th>Course</th><th>Actions</th></tr></thead><tbody>{items.map((s) => <tr key={s.id}><td className="name-cell">{s.name}</td><td>{s.email}</td><td>{s.phone}</td><td>{s.department}</td><td>{s.course}</td><td><div className="row-actions"><Link to={`/students/${s.id}/edit`}>Edit</Link><button className="link-danger" disabled={busyId === s.id} onClick={() => remove(s)}>{busyId === s.id ? 'Deleting…' : 'Delete'}</button></div></td></tr>)}</tbody></table></div>}</section></main>
+}

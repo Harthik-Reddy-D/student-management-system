@@ -1,0 +1,8 @@
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import api, { apiMessage } from '../services/api.js'
+export default function Dashboard() {
+  const [counts, setCounts] = useState({ students: 0, courses: 0 }); const [loading, setLoading] = useState(true); const [error, setError] = useState('')
+  useEffect(() => { let alive = true; Promise.all([api.get('/students'), api.get('/courses')]).then(([s,c]) => { if (alive) setCounts({ students: s.data.length, courses: c.data.length }) }).catch((e) => { if (alive) setError(apiMessage(e)) }).finally(() => { if (alive) setLoading(false) }); return () => { alive = false } }, [])
+  return <main className="page"><div className="page-heading"><div><p className="eyebrow">OVERVIEW</p><h1>Dashboard</h1><p className="muted">A clear view of your academic records.</p></div></div>{error && <div className="alert">{error}</div>}<section className="stat-grid"><article className="stat-card"><span className="stat-icon">♙</span><p className="muted">Total students</p><strong>{loading ? '…' : counts.students}</strong><Link to="/students">Manage students →</Link></article><article className="stat-card"><span className="stat-icon">▤</span><p className="muted">Total courses</p><strong>{loading ? '…' : counts.courses}</strong><Link to="/courses">Browse courses →</Link></article></section><section className="panel welcome"><div><h2>Keep everything organized</h2><p className="muted">Add a student or review your course catalog.</p></div><div className="actions"><Link className="button button-primary" to="/students/new">Add student</Link><Link className="button button-secondary" to="/courses">View courses</Link></div></section></main>
+}
